@@ -1,0 +1,59 @@
+d := distance (A,B)  
+none := -1     % programming trick - none is for distances to be ignored %
+Remove the edge (A,B) from the graph.  
+Using Dijkstra's shortest path algorithm, for every node $U$ compute its shortest
+    distances α(U) and β(U) to respectively A and B.  
+d_A := none
+d_B := none
+  % We use lists of pairs, representing the [x,y] coordinate of points, where the %
+  % abcissa x stands for the choice of length (A,C), and the ordinate y stands is the %
+  % distance of some node to C. %
+  % The call first(L) returns a pointer to the first pair of list L. %
+  % Given a pointer t to a pair, t.x and t.y give the two components of the pair, %
+  % and the functions prev and next return a pointer to the previous or the next pair, or %
+  % NIL if it does not exist. The call add([a, b], L) adds the pair [a, b] to the list L. %
+  % The call remove(t) removes the element pointed by t from its list. %
+For every node U do   
+T := []     % T is the list of tops of curves for individual nodes %  
+    if    α(U)+d ≤ β(U) then d_A := max(d_A, α(U))   
+    elsif β(U)+d ≤ α(U) then d_B := max(d_B, β(U))   
+    else add( [(β(U)-α(U)+d)/2, (β(U)+α(U)+d)/2], T)
+% Instead of V curve, create dummy tops at ends of [0,d] interval %
+if d_A ≠none then add( [d, d_A+d], T)
+if d_B ≠none then add( [0, d_B+d], T)
+Sort T in increasng order of abscissa
+% Remove from T all tops that are dominated by another top %
+t1 := first(T)
+t2 := next(t1)
+Repeat
+    if abs(t1.x-t2.x) ≤abs(t1.y-t2.y)
+    then  % one top dominates the other %
+        if t1.y≥t2.y
+            then  % t1 dominates %
+            remove(t2)
+            t2 := next(t1)
+            if t2=NIL then exit loop
+        else % t2 dominates %
+            remove(t1)
+            t1 := pred(t2)
+            if t1=NIL then
+                t1 := t2; 
+                t2 := next(t1)
+                if t2=NIL then exit loop
+     else % neither top dominate the other %
+         t1 := t2
+         t2 := next(t1)
+         if t2=NIL then exit loop
+% Compute all local minima %
+M := []  % M is the list of minima, where roof shaped curves intersect, %
+         % or intersect the boundaries of the interval [0.d]. %
+t2 := first(T);
+if t2.x≠0 then add( [0, t2.y-t2.x], M)
+repeat
+    t1 := t2
+    t2 := next(t1)
+    if t2=NIL then exit loop
+    add( [(t1.y-t2.y+t1.x+t2.x)/2, (t1.y+t2.y+t1.x-t2.x)/2], M)
+if t2.x≠d then add( [d, t2.y-d+t2.x], M)
+Select in M the pairs with the smallest ordinates. Their abcissas are all
+    the possible answers to the problem.
